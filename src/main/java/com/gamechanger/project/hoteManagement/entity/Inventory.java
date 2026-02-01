@@ -1,8 +1,7 @@
 package com.gamechanger.project.hoteManagement.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -19,6 +18,9 @@ import java.time.LocalDateTime;
         name = "unqiue_hotel_room_date",
         columnNames = {"hotel_id", "room_id", "date"} // combination these 3 things should be unique
 ))
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Inventory {
     // inventory is storing info about room, one every particular days.
 
