@@ -1,21 +1,28 @@
 package com.gamechanger.project.hoteManagement.service;
 
 import com.gamechanger.project.hoteManagement.dto.HotelDto;
+import com.gamechanger.project.hoteManagement.dto.HotelInfoDto;
+import com.gamechanger.project.hoteManagement.dto.RoomDto;
 import com.gamechanger.project.hoteManagement.entity.Hotel;
 import com.gamechanger.project.hoteManagement.entity.Room;
 import com.gamechanger.project.hoteManagement.exception.ResourceNotFoundException;
 import com.gamechanger.project.hoteManagement.repository.HotelRepository;
+import com.gamechanger.project.hoteManagement.repository.RoomRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class HotelServiceImpl implements HotelService {
 
+    private final RoomRepository roomRepository;
     private final HotelRepository hotelRepository;
     private final ModelMapper modelMapper;
     private final InventoryService inventoryService;
@@ -58,19 +65,16 @@ public class HotelServiceImpl implements HotelService {
     @Override
     @Transactional
     public void deleteHotelById(Long hotelId) {
-        log.info("Getting the hotel with Id {} for deletion", hotelId);
-        boolean exists = hotelRepository.existsById(hotelId);
-        if(!exists) throw new ResourceNotFoundException("Hotel not found with id: " + hotelId);
-
         Hotel hotel = hotelRepository
                 .findById(hotelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id: " + hotelId));
 
 
-        hotelRepository.deleteById(hotelId);
         for (Room room: hotel.getRooms()){
-            inventoryService.deleteFutureInventory(room);
+            inventoryService.deleteAllInventories(room);
+            roomRepository.deleteById(room.getId());
         }
+        hotelRepository.deleteById(hotelId);
     }
 
     @Override
@@ -89,5 +93,20 @@ public class HotelServiceImpl implements HotelService {
         for (Room room : hotel.getRooms()){
             inventoryService.initializeRoomForAYear(room);
         }
+    }
+
+
+    @Override
+    public HotelInfoDto getHotelInfoById(Long hotelId) {
+        Hotel hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id : " + hotelId));
+
+        List<RoomDto> rooms = hotel
+                .getRooms()
+                .stream()
+                .map((element) -> modelMapper.map(element, RoomDto.class))
+                .toList();
+
+        return new HotelInfoDto(modelMapper.map(hotel, HotelDto.class), rooms);
     }
 }

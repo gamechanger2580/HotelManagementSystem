@@ -1,8 +1,12 @@
 package com.gamechanger.project.hoteManagement.service;
 
 import com.gamechanger.project.hoteManagement.dto.HotelDto;
+import com.gamechanger.project.hoteManagement.dto.HotelInfoDto;
+import org.jspecify.annotations.Nullable;
 
 public interface HotelService {
+
+    HotelInfoDto getHotelInfoById(Long hotelId);
 
     HotelDto createNewHotel(HotelDto hotelDto);
 
